@@ -1,0 +1,108 @@
+{
+  "name": "maestri-open-desktop",
+  "version": "0.1.0",
+  "description": "Local-first infinite canvas for orchestrating terminals and AI agents.",
+  "author": "Maestri Open Contributors",
+  "private": true,
+  "type": "module",
+  "main": "out/main/index.js",
+  "bin": {
+    "maestri": "out/cli/index.cjs",
+    "omaestri": "out/cli/index.cjs"
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build && npm run build:cli",
+    "build:cli": "tsup src/cli/index.ts --format cjs --platform node --out-dir out/cli --clean false",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "rebuild:native": "electron-rebuild -f -w node-pty",
+    "dist": "npm run build && electron-builder",
+    "dist:dir": "npm run build && electron-builder --dir"
+  },
+  "dependencies": {
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/lang-markdown": "6.5.2",
+    "@codemirror/language-data": "6.5.2",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.14",
+    "@radix-ui/react-dialog": "1.3.1",
+    "@radix-ui/react-dropdown-menu": "2.2.1",
+    "@radix-ui/react-tooltip": "1.4.1",
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/addon-search": "0.16.0",
+    "@xterm/addon-webgl": "0.19.0",
+    "@xterm/xterm": "6.0.0",
+    "commander": "15.0.0",
+    "jotai": "3.0.1",
+    "lucide-react": "1.56.0",
+    "mermaid": "12.2.0",
+    "nanoid": "6.0.2",
+    "node-pty": "1.1.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "4.2.1",
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "electron": "44.7.1",
+    "electron-builder": "26.15.3",
+    "electron-vite": "5.0.0",
+    "eslint": "10.12.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "prettier": "3.9.10",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2",
+    "vite": "7.3.7"
+  },
+  "build": {
+    "appId": "dev.maestri.open",
+    "productName": "Maestri Open",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/node-pty/**"
+    ],
+    "files": [
+      "out/**",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "resources",
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development"
+    },
+    "npmRebuild": false
+  }
+}
