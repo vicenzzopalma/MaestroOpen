@@ -1,5 +1,6 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import { LoopManager } from './automation/loop-manager'
 import { AutomationServer } from './automation/server'
 import { registerIpc } from './ipc/register-ipc'
 import { WorkspaceStore } from './persistence/workspace-store'
@@ -10,6 +11,7 @@ let unregisterIpc: (() => void) | undefined
 let automationServer: AutomationServer | undefined
 let mainWindow: BrowserWindow | undefined
 let cleanupStarted = false
+let loops: LoopManager | undefined
 
 function createWindow(): BrowserWindow {
   const isDevelopment = Boolean(process.env.ELECTRON_RENDERER_URL)
@@ -25,7 +27,7 @@ function createWindow(): BrowserWindow {
       ? { titleBarOverlay: { color: '#0b0d12', symbolColor: '#a8adbd', height: 42 } }
       : {}),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.mjs'),
+      preload: join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -34,9 +36,13 @@ function createWindow(): BrowserWindow {
   })
 
   if (!isDevelopment) window.once('ready-to-show', () => window.show())
-  window.on('closed', () => ptyManager.disposeOwner(window.webContents.id))
+  const ownerId = window.webContents.id
+  window.on('closed', () => {
+    loops?.dispose()
+    ptyManager.disposeOwner(ownerId)
+  })
   window.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https://')) void shell.openExternal(url)
+    if (url.startsWith('https://') || url.startsWith('http://')) void shell.openExternal(url)
     return { action: 'deny' }
   })
 
@@ -53,22 +59,35 @@ function createWindow(): BrowserWindow {
 const hasSingleInstanceLock = app.requestSingleInstanceLock()
 if (!hasSingleInstanceLock) app.quit()
 
-void app.whenReady().then(async () => {
-  if (process.platform === 'win32') app.setAppUserModelId('dev.maestri.open')
+void app
+  .whenReady()
+  .then(async () => {
+    if (process.platform === 'win32') app.setAppUserModelId('dev.maestri.open')
 
-  const workspaceStore = new WorkspaceStore(join(app.getPath('userData'), 'workspace.json'))
-  unregisterIpc = registerIpc(ptyManager, workspaceStore)
-  mainWindow = createWindow()
-  automationServer = new AutomationServer(ptyManager, workspaceStore, () => mainWindow)
-  await automationServer.start()
+    const workspaceStore = new WorkspaceStore(join(app.getPath('userData'), 'workspace.json'))
+    unregisterIpc = registerIpc(ptyManager, workspaceStore)
+    loops = new LoopManager(workspaceStore, ptyManager)
+    automationServer = new AutomationServer(ptyManager, workspaceStore, () => mainWindow, loops)
+    await automationServer.start()
+    ipcMain.handle('loop:start', (_event, id: string, prompt: string, deadline: string) =>
+      loops!.start(id, prompt, deadline)
+    )
+    ipcMain.handle('loop:stop', (_event, id: string) => loops!.stop(id))
+    ipcMain.handle('loop:list', () => loops!.list())
+    ipcMain.handle('automation:call', (_event, method: string, params: Record<string, unknown>) =>
+      automationServer!.dispatch(method, params ?? {})
+    )
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    mainWindow = createWindow()
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    })
   })
-}).catch((error: unknown) => {
-  console.error('Falha ao iniciar o Maestri Open:', error)
-  app.quit()
-})
+  .catch((error: unknown) => {
+    console.error('Falha ao iniciar o Maestri Open:', error)
+    app.quit()
+  })
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
@@ -79,6 +98,7 @@ app.on('before-quit', (event) => {
   cleanupStarted = true
   event.preventDefault()
   unregisterIpc?.()
+  loops?.dispose()
   ptyManager.dispose()
   void automationServer?.stop().finally(() => app.exit(0))
 })

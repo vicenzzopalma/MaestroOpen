@@ -58,16 +58,16 @@ src/
 
 A árvore de comandos já está reservada no CLI para evitar quebra de scripts:
 
-- `list`, `ask`, `check`, `debug`, `notify`, `recruit`, `dismiss`, `connect`
+- `list`, `ask`, `check`, `say`, `recall`, `debug`, `notify`, `recruit`, `dismiss`, `connect`
 - `note create|read|write|edit|stack|unstack|delete`
 - `preset list|show|create|set|delete`
-- `role list|show|create|edit|write|assign`
+- `role list|show|create|edit|write|assign|delete`
 - `portal create|edit|close|devices` e todos os verbos de automação web/Android
 - `floor create|list|land|delete|status|unload`
 - `workspace create|list|move|rename`
 - `routine list|show|create|edit|enable|disable|run|delete`
 
-Os dois nomes de binário apontam para o mesmo código. A aplicação grava um descritor em `~/.maestri/runtime.json`; o cliente autentica cada chamada JSON-RPC por um token efêmero e conversa somente por pipe/socket local.
+Os dois nomes de binário apontam para o mesmo código. A aplicação grava um descritor em `~/.maestri/runtime.json`; o cliente autentica cada chamada JSON-RPC por um token efêmero e conversa somente por pipe/socket local. `MAESTRI_PIPE` e `MAESTRI_AUTOMATION_ENDPOINT` podem substituir o endereço do descritor. Terminais criados pelo canvas recebem `MAESTRI_TERMINAL_ID`; `maestri list` usa esse ID para mostrar apenas os nós ligados ao terminal atual. Recrutamento via CLI cria o PTY e seu cartão no workspace, e alterações externas são enviadas ao renderer por IPC.
 
 ## Melhorias mantidas sem quebrar a experiência
 

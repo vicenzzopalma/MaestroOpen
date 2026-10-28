@@ -14,9 +14,29 @@ function executableOnPath(name: string): string | undefined {
 }
 
 export function discoverShells(): ShellDescriptor[] {
+  const systemRoot = process.env.SystemRoot ?? 'C:\\Windows'
+  const defaultPwsh = `${systemRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`
+  const defaultCmd = process.env.ComSpec ?? `${systemRoot}\\System32\\cmd.exe`
+
   const candidates: Array<ShellDescriptor & { candidates: string[] }> =
     process.platform === 'win32'
       ? [
+          {
+            id: 'powershell',
+            name: 'Windows PowerShell',
+            executable: existsSync(defaultPwsh) ? defaultPwsh : '',
+            candidates: ['powershell', 'pwsh'],
+            args: ['-NoLogo'],
+            kind: 'powershell'
+          },
+          {
+            id: 'cmd',
+            name: 'Command Prompt',
+            executable: existsSync(defaultCmd) ? defaultCmd : 'cmd.exe',
+            candidates: ['cmd'],
+            args: [],
+            kind: 'cmd'
+          },
           {
             id: 'pwsh',
             name: 'PowerShell 7',
@@ -24,22 +44,6 @@ export function discoverShells(): ShellDescriptor[] {
             candidates: ['pwsh'],
             args: ['-NoLogo'],
             kind: 'powershell'
-          },
-          {
-            id: 'powershell',
-            name: 'Windows PowerShell',
-            executable: '',
-            candidates: ['powershell'],
-            args: ['-NoLogo'],
-            kind: 'powershell'
-          },
-          {
-            id: 'cmd',
-            name: 'Command Prompt',
-            executable: process.env.ComSpec ?? 'cmd.exe',
-            candidates: [],
-            args: [],
-            kind: 'cmd'
           },
           {
             id: 'git-bash',

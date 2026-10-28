@@ -17,7 +17,11 @@ export default defineConfig({
     build: {
       sourcemap: true,
       rollupOptions: {
-        input: resolve('src/preload/index.ts')
+        input: resolve('src/preload/index.ts'),
+        output: {
+          format: 'cjs',
+          entryFileNames: 'index.cjs'
+        }
       }
     }
   },

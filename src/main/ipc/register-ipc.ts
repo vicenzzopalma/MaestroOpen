@@ -1,6 +1,7 @@
 import { app, ipcMain } from 'electron'
 import type { CreateTerminalRequest, WorkspaceDocument } from '../../shared/contracts'
-import { IPC } from '../../shared/contracts'
+import { defaultAutomationEndpoint } from '../../shared/automation'
+import { IPC } from '../../shared/ipc'
 import type { WorkspaceStore } from '../persistence/workspace-store'
 import type { PtyManager } from '../pty/pty-manager'
 
@@ -8,7 +9,7 @@ export function registerIpc(pty: PtyManager, workspace: WorkspaceStore): () => v
   ipcMain.handle(IPC.appInfo, () => ({
     version: app.getVersion(),
     platform: process.platform,
-    automationEndpoint: process.platform === 'win32' ? '\\\\.\\pipe\\maestri' : 'maestri.sock'
+    automationEndpoint: defaultAutomationEndpoint()
   }))
   ipcMain.handle(IPC.shellsList, () => pty.listShells())
   ipcMain.handle(IPC.terminalCreate, (event, request: CreateTerminalRequest) =>

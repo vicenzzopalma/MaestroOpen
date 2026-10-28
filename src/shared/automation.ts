@@ -5,12 +5,12 @@ export const AUTOMATION_PROTOCOL_VERSION = 1
 
 export function defaultAutomationEndpoint(): string {
   return process.platform === 'win32'
-    ? '\\\\.\\pipe\\maestri'
-    : join(tmpdir(), `maestri-${process.getuid?.() ?? 'user'}.sock`)
+    ? '\\\\.\\pipe\\maestri-open'
+    : join(tmpdir(), `maestri-open-${process.getuid?.() ?? 'user'}.sock`)
 }
 
 export function runtimeDescriptorPath(): string {
-  return join(homedir(), '.maestri', 'runtime.json')
+  return join(homedir(), '.maestri-open', 'runtime.json')
 }
 
 export type JsonRpcRequest = {

@@ -9,3 +9,17 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+.reference/
+analysis/maestri-focused/
+analysis/maestri-userdata/
+analysis/maestri-rea*.json
+analysis/*.png
+maestri-original.png
+functional-canvas.png
+
+--close
+.mcp.json
+monstro.txt
+1/
+analysis/
+
